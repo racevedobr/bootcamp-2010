@@ -4,23 +4,47 @@ const server = express();
 
 server.use(express.json());
 
-const projects = []; 
-const tasks = [];
+// verifica se o projeto existe
+function checkProjectExists(req, res, next) {
+    const { id } = req.params;
 
+    const project = projects.find(p => p.id == id);
 
+    if (!project) {
+        return res.status(400).json({ message: 'Project does not exists'});
+    }
+
+    return next();
+ };
+
+ //Conta as requisições
+function contaRequisicoesFeitas(eq, res, next) {
+
+    console.count("Número de requisições");
+
+    return next();
+};
+
+server.use(contaRequisicoesFeitas);
+
+const projects = [];
+
+// Consulta todos os projetos
 server.get('/projects', (req, res) => {
-    
+
     return res.send(projects);
 
 });
 
-server.get('/projects/:id', (req, res) => {
+//Consulta  pelo id do projeto
+server.get('/projects/:id', checkProjectExists, (req, res) => {
     const { id } = req.params;
     return res.json(projects[id]);
 
 });
 
-server.post('/projects', (req, res) => {
+// Cria o projeto
+server.post('/projects',  (req, res) => {
 const { id, title } = req.body;
 
 const project = {
@@ -35,29 +59,44 @@ res.json(projects);
 
 });
 
-server.post('/projects/:id/tasks', (req, res) => {
+//Cria  a task  no projeto
+server.post('/projects/:id/tasks', checkProjectExists, (req, res) => {
     const { id } = req.params;
     const { title } = req.body;
-    
+
     const project = projects.find(p => p.id == id);
-    
+
     project.tasks.push(title)
 
     res.json(project);
-    
+
     });
 
-server.put('/projects/:id', (req, res) => {
+// Edita o projeto
+server.put('/projects/:id', checkProjectExists, (req, res) => {
     const { id } = req.params;
     const { title } = req.body;
 
     const project = projects[id]
-    console.log(project) 
+    console.log(project)
     project.title = title;
     console.log(project)
 
     res.json(project);
 
+
+});
+
+//Consulta  pelo id do projeto
+server.delete('/projects/:id', checkProjectExists, (req, res) => {
+    const { id } = req.params;
+
+    const indexProject = projects.findIndex(p => p.id == id);
+
+    projects.splice(indexProject.id, 1);
+
+
+    return res.send();
 
 });
 
